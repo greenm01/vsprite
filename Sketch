@@ -1,0 +1,36 @@
+
+/* Tom's SVG Path machine..
+ *
+ * CMD  PARAMS  NAME                    NOTES
+ * M    (x y)+  moveto absolute         Extra x,y pairs: implicit 'lineto'
+ * L    (x y)+  lineto absolute         Extra x,y pairs: continue drawing lines
+ * Z,z          closepath
+ * H    x+      horiz lineto abs
+ * V    x+      vert lineto abs
+ * C    (x1 y1 x2 y2 x y)+   curveto    Cubic Bezier
+ * S    (x2 y2 x y)+         curveto    shorthand (x1,y1 reflected)
+ * Q    (x1 y1 x y)+         curveto    Quadratic Bezier
+ * T    (x y)+               curveto    shorthand
+ * A    ... see spec ...     arc        Elliptical arc.....
+ *
+ * Note: all commands are *relative* if lowercased (except closepath)
+ */
+
+/* Ooops, someone already did that work... from SVG tokenizer (svg.cc):
+
+  - spaces are allowed (except within a number) as well as ','
+  - a number starts with '-' or number.
+  - a number ends when the next character is not a number or '.'
+  - a command is a letter. Allowed letters are:
+    Z z - closePath (0)
+    L l - lineto (2)
+    H h - horizontal lineto (1)
+    V v - vertical lineto (1)
+    C c - curveto (6)
+    S s - smooth curveto (4)
+    Q q - quadratic bezier curveto (4)
+    T t - smooth quadratic bezier curveto (2)
+    A a - elliptical arc (7)
+  - Each command is followed by n arguments. The arguments can be
+    repeated by multiply of n to mark up another similar command.
+*/
