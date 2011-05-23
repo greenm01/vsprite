@@ -1,23 +1,16 @@
 #ifndef SVGPARSER_H
 #define SVGPARSER_H
 
-#include <cstring>
-#include <map>
-#include <list>
+#include <string.h>
 #include <GL/glfw.h>
-#include <Box2D/Box2D.h>
-
-extern "C" {
-#include <lua5.1/lua.h>      // lua_XX functions
-#include <lua5.1/lauxlib.h>  // luaL_XX
-}
-
-// INTERNAL DEPENDENCIES
-#include "xmlParser.h"
+#include "uthash/uthash.h"
+#include "uthash/utlist.h"
 #include "matrix.h"
 #include "gradient.h"
 #include "path.h"
 #include "skin.h"
+
+typedef int bool;
 
 const float32 kMaxShipSize = 5;  // Maximum ship size (meters)
 const int kCirclePoints = 25;   // Number of points in a circle

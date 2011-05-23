@@ -4,61 +4,39 @@
 // - Simple top-down parser/lexer in the style of 'META II' [Schorre 1964]
 //
 
-// xmlParser options:
-#define TIXML_USE_TICPP
-#define TIXML_USE_STL
-
 #include "svgparser.h"
-#include <iostream>
-#include "../settings.h"
 
 //------------------------------------------------------------------------
-// Parses the given SVG file and stores it in the supplied Skin.
+// Parses the given SVG file and stores it in the supplied Sprite.
 // Returns true on success.
 //
-bool SVGparser::load(const char *filename, float32 scale, Skin *skin) {
+bool svg_load(const char *filename, float32 scale, Sprite *sprite) {
   if(svg_debug) {
     printf("===============================================================\n");
     printf("Loading %s  scale=%f\n", filename, scale);
     printf("===============================================================\n");
   }
 
+  //TODO new XML parser....
   XMLNode top = XMLNode::openFileHelper(filename).getChildNode("svg");
 
-  const char *width = top.getAttribute("width");
-  const char *height = top.getAttribute("height");
+  const char *width_s = top.getAttribute("width");
+  const char *height_s = top.getAttribute("height");
 
-  this->width = atof(std::string(width).c_str());
-  this->height = atof(std::string(height).c_str());
+  double width = atof(width_s);
+  double height = atof(height_s);
 
   // This flips from SVG cord. space to OpenGL/world cord. space
-  transform_ = new Matrix(1, 0, 0, -1, 0, this->height);
+  transform_ = new Matrix(1, 0, 0, -1, 0, height);
 
-  printf("w = %f, h = %f\n", this->width, this->height);
-
-  // TODO: Add viewbox capability?  (huh?)
+  printf("w = %f, h = %f\n", width, height);
 
   // Parse SVG paths into a temporary list
   path_list.clear();
   parse_svg(top, 0);
 
   skin->path_list = path_list;
-  skin->compute_bbox();
 
-  // Bounding box calcs... downsize and center
-  float w,h;
-  w = skin->bbx2 - skin->bbx1;
-  h = skin->bby2 - skin->bby1;
-
-  skin->scale = scale;
-
-  skin->size = scale * b2Vec2(w,h);
-  skin->skeleton = skeleton;
-  
-  // translate points around (0,0) and triangulate for physics layer
-  if(skeleton.size() > 0)
-    skin->init_skeleton();
-  
   // Render to a GL display list
   GLuint displist = glGenLists(1);
   if(!displist) {
