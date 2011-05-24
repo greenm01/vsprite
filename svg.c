@@ -13,7 +13,7 @@
 //#include "uthash/utstring.h"
 #include "uthash/uthash.h"
 
-// CRUFTY...
+// XXX CRUFT...
 const float32 kMaxShipSize = 5;  // Maximum ship size (meters)
 const int kCirclePoints = 25;   // Number of points in a circle
 const int kBezierPoints = 20;   // Number of points in a Bezier curve
@@ -42,6 +42,20 @@ void skip_whitespace() {
 bool is_sym(char c) {
     return isalnum(c) || c=='"' || c=='\'' || c==':' || c=='.'
           || c=='*' || c=='/' || c=='%' || c=='+' || c=='-' || c=='_';
+}
+
+// Match a string
+bool match(char *s) {
+  long pos = ftell(input);
+  int n = strlen(s);
+  int i;
+  for(i=0; i<n; i++) {
+    if( s[i] != fgetc(input) ) {
+      fseek(input, pos, SEEK_SET);
+      return false;
+    }
+  }
+  return true;
 }
 
 //========================================================================
@@ -128,28 +142,19 @@ void init_fnmap() {
 
 bool parse_xml_comment() {
   //comment = '<!--' ([^-] | '-' . [^-])* '-->'     IGNORE
-printf("Comment?\n");
-printf("Peek= '%c'\n", fpeek(input));
-  if( fgetc(input) == '<'
-      && fgetc(input) == '!'
-      && fgetc(input) == '-'
-      && fgetc(input) == '-' )
-    printf("YES\n");
-  else {
-    printf("NOT A COMMENT\n");
-printf("Peek= '%c'\n", fpeek(input));
-    return false;
-  }
+  if(!match("<!--")) return false;
   for(;;) {
     int c = fgetc(input);
-printf("--> '%c'\n", c);
     if(c=='-') {
-      if(fscanf(input, "->"))
+      if(match("->")) {
+        printf("PARSED A COMMENT\n");
         return true;
+      }
     }
   }
 }
 
+//------------------------------------------------------------------------
 char* parse_xml_name() {
   char *buf;
   size_t bufsize;
@@ -159,12 +164,14 @@ char* parse_xml_name() {
     exit(1);
   }
   int c = fgetc(input);
-//printf("--> '%c'\n", c);
+  //printf("--> '%c'\n", c);
+
   if (isalpha(c) || c=='_' || c==':') {
-    while (isalnum(c) || c=='.' || c=='-') {
+    // Other chars (_ and : aren't
+    while (isalnum(c) || c=='_' || c==':' || c=='.' || c=='-') {
       fputc(c, out);
       c = fgetc(input);
-//printf("--> '%c'\n", c);
+      //printf("--> '%c'\n", c);
     }
     ungetc(c, input);
     fclose(out);
@@ -179,6 +186,7 @@ char* parse_xml_name() {
   }
 }
 
+//------------------------------------------------------------------------
 bool parse_xml_attr() {
   skip_whitespace();
 
@@ -220,7 +228,12 @@ bool parse_xml_attr() {
       }
       break;
     case '\'':
-      // TODO
+      for(;;) {
+        c = fgetc(input);
+        //TODO parse &...; XML entity refs
+        if (c == '\'') break;
+        fputc(c, out);
+      }
       break;
     default:
       fclose(out); free(buf);
@@ -228,44 +241,36 @@ bool parse_xml_attr() {
       return false;
   }
   fclose(out);
-//printf("Parsed attr value: %s\n", buf);
-printf("Parsed attr: %s = %s\n", k, buf);
+
+  //printf("Parsed attr value: %s\n", buf);
+  //printf("Parsed attr: %s = %s\n", k, buf);
+  //printf("Parsed attr: %s\n", k);
   //TODO do something w/ name/value
 
   return true;
 }
 
+//------------------------------------------------------------------------
 bool parse_xml_attrs() {
   while(parse_xml_attr());
   return true;
 }
 
+//------------------------------------------------------------------------
 bool parse_xml_pi() {
-printf("PI?\n");
-  // Parse a program instruction ("<?... ?>")
-  // and ignore it
-long pos = ftell(input);
-printf("pos=%ld\n", pos);
-  if(fgetc(input) == '<'
-     && fgetc(input) == '?') {
-printf("GOT <?\n");
-    free(parse_xml_name());
-//printf("GOT name\n");
-    parse_xml_attrs();
-//printf("GOT attrs\n");
-    if(fgetc(input) != '?') return false;
-    if(fgetc(input) != '>') return false;
-//printf("GOT ?>\n");
-    return true;
-  }
-  else {
-    // Not matched
-    fseek(input, pos, SEEK_SET);
-    printf("pos=%ld\n", ftell(input));
-    return false;
-  }
+  // Parse a program instruction ("<?... ?>") and IGNORE IT
+  if(!match("<?")) return false;
+  //printf("GOT <?\n");
+  free(parse_xml_name());
+  //printf("GOT name\n");
+  parse_xml_attrs();
+  //printf("GOT attrs\n");
+  if(!match("?>")) return false;
+  //printf("GOT ?>\n");
+  return true;
 }
 
+//------------------------------------------------------------------------
 bool parse_xml_misc() {
   // Parse "misc" - comments and PIs
   do skip_whitespace();
@@ -273,6 +278,7 @@ bool parse_xml_misc() {
   return true;
 }
 
+//------------------------------------------------------------------------
 bool parse_xml_prolog() {
   // <?xml ... ?> header
   if (!parse_xml_pi()) return false;
@@ -281,10 +287,49 @@ bool parse_xml_prolog() {
   return true;
 }
 
+//------------------------------------------------------------------------
+bool parse_xml_element();  // forward ref
+
+bool parse_xml_content() {
+  for(;;) {
+    int c = fgetc(input);
+    //printf("--> '%c'\n", c);
+    if(c=='<') {
+      int c = fgetc(input);
+      fseek(input, -2, SEEK_CUR);
+      if(c=='/') {
+        return true;
+      }
+      parse_xml_element();
+    }
+  }
+}
+
+//------------------------------------------------------------------------
 bool parse_xml_element() {
   if(fgetc(input) != '<') return false;
   char *name = parse_xml_name();
+  printf("BEGIN <%s> TAG\n", name);
+
   parse_xml_attrs();
+
+  if(match("/>")) {
+    printf("PARSED EMPTY <%s/> TAG\n", name);
+    return true;
+  }
+
+  if(!match(">")) {
+    printf("EXPECTED '>' TO CLOSE <%s> TAG\n", name);
+    return false;
+  }
+
+  printf("PARSING CONTENT OF <%s> TAG\n", name);
+  parse_xml_content();
+
+  if(! (match("</") && match(name) && match(">"))) {
+    printf("EXPECTED </%s> CLOSING TAG\n", name);
+    return false;
+  }
   return true;
 }
 
@@ -306,13 +351,15 @@ bool svg_load(const char *filename, float32 scale, Sprite *sprite) {
     perror("unable to open input file");
     return false;
   }
-
   if (!(parse_xml_prolog())) {
     printf("XML prologue not parsed\n");
     return false;
   }
-
-  parse_xml_element();
+  if (!parse_xml_element()) {
+    printf("FAILED to parse XML body (i.e. <svg>...</svg>\n");
+    return false;
+  }
+  printf("FINISHED PARSING SVG\n");
 
 #if 0
   const char *width_s = top.getAttribute("width");
@@ -353,5 +400,4 @@ bool svg_load(const char *filename, float32 scale, Sprite *sprite) {
 
   return true;
 }
-
-
+//========================================================================
