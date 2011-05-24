@@ -1,6 +1,12 @@
 #ifndef GRADIENT_H
 #define GRADIENT_H
 
+#if 1   // C placeholder
+#include <GL/glfw.h>
+typedef struct {} Gradient;
+GLubyte* gradient_interp(Gradient *g, float x1, float y1);
+#else   // C++ ... porting TODO
+
 #include <string>
 #include <map>
 #include <GL/glfw.h>
@@ -66,5 +72,6 @@ public:
     return sqrtf(pow(pt.x - cx, 2) + pow(pt.y - cy, 2))/r;
   }
 };
+#endif
 
 #endif

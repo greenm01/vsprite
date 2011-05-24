@@ -1,5 +1,7 @@
+bin
 *.swp
 *~
+*.dep
 *.o
 *.a
 *.so

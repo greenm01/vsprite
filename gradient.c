@@ -1,5 +1,11 @@
 #include "gradient.h"
 
+#if 1
+GLubyte* gradient_interp(Gradient *g, float x1, float y1) {
+    GLubyte c[4] = {255, 0, 255, 255};
+    return c;
+}
+#else
 GLubyte *Gradient::interp(b2Vec2 pt) {
   if(stops.size() == 0) {
     GLubyte c[4] = {255, 0, 255, 255};
@@ -30,3 +36,4 @@ GLubyte *Gradient::interp(b2Vec2 pt) {
   top--;
   return top->second;
 }
+#endif

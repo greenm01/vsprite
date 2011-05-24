@@ -1,6 +1,13 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
+#include "mytypes.h"
+
+#if 1   // C placeholder
+typedef struct {} Matrix;
+inline Vec2 matrix_xform(Matrix *m, Vec2 v);
+#else   // C++ ... porting TODO
+
 #include <string>
 #include <cstdio>
 #include <Box2D/Box2D.h>
@@ -52,5 +59,6 @@ inline Matrix * mul(Matrix *m1, Matrix *m2) {
   float32 x = m2->val[3]; float32 y = m2->val[4]; float32 z = m2->val[5];
   return new Matrix(a*u + c*v, b*u + d*v, a*w + c*x, b*w + d*x, a*y + c*z + e, b*y + d*z + f);
 }
+#endif
 
 #endif

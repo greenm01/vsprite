@@ -1,3 +1,6 @@
+// In SVG terminology, a "path" is composed of one OR MORE "loops"
+// (polylines, open or closed), all with the same color properties.
+
 #include "path.h"
 
 //------------------------------------------------------------------------
@@ -15,6 +18,8 @@ void curpath_reset() { utarray_new(curpath, &ptr_icd); }
 void curloop_reset() { utarray_new(curloop, &ptr_icd); }
 
 //------------------------------------------------------------------------
+// Instantiate a new Path object
+//
 Path* path_new() {
   Path *p = (Path*)malloc(sizeof(Path));
   curpath_reset();
@@ -28,6 +33,9 @@ Path* path_new() {
 }
 
 //------------------------------------------------------------------------
+// Start a new loop (push the old one)
+//
+// XXX RENAME path_end_loop?
 void path_finish(Path *p) {
   int n = utarray_len(curloop);
   if(n) {
@@ -41,6 +49,9 @@ void path_finish(Path *p) {
 }
 
 //------------------------------------------------------------------------
+// Close the current loop, and start a new loop
+//
+// XXX RENAME path_close_loop?
 void path_close(Path *p) {
   utarray_push_back(curloop, utarray_front(curloop));
   path_finish(p);
@@ -212,7 +223,7 @@ inline void path_apply_transform(Path *p) {
     for(l=0; l < p->nloops; l++) {
       loop = p->loops[l];
       for(i=0; i < loop->npoints; i++) {
-        loop->points[i] = transform_xform(loop->points[i]);
+        loop->points[i] = matrix_xform(p->transform, loop->points[i]);
       }
     }
   }

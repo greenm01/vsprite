@@ -5,25 +5,27 @@
 #include "sprite.h"
 //#include "svgparser.h"
 
+void compute_bbox(Sprite *sprite, float32 scale);
+
 //------------------------------------------------------------------------
 Sprite* sprite_new(const char *filename, float32 scale) {
   printf("-- new Skin('%s', %f)\n", filename, scale);
   Sprite *sprite = (Sprite*)malloc(sizeof(Sprite));
   //SVGparser *svgparser = new SVGparser();
   svg_load(filename, scale, sprite);
-  compute_bbox(sprite);
+  compute_bbox(sprite, scale);
   sprite->scale = scale;
   return sprite;
 }
 
 //------------------------------------------------------------------------
-
 void compute_bbox(Sprite *sprite, float32 scale) {
   float bbx1, bby1, bbx2, bby2;
 
   bbx1 = bby1 = +INFINITY;
   bbx2 = bby2 = -INFINITY;
 
+#ifdef CPP  //TODO rewrite in C *after* design decisions...
   PathList::iterator p;         // path
   Vec2lol::iterator i;          // loop
   Vec2list::iterator j;         // vertex
@@ -47,6 +49,7 @@ void compute_bbox(Sprite *sprite, float32 scale) {
     }
     ++p;
   }
+#endif
   printf("-- bbox: %.0f,%.0f %.0f %.0f\n", bbx1,bby1, bbx2,bby2);
 
   // Bounding box calcs... downsize and center

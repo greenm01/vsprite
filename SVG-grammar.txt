@@ -1,0 +1,41 @@
+XML GRAMMAR (with shortcuts; based on W3C XML 1.1 spec)
+
+document = prolog element misc*
+  prolog = xmldecl misc*
+  misc = comment | pi
+  comment = '<!--' ([^-] | '-' . [^-])* '-->'     IGNORE
+  pi = '<?' name attr* '?>'          IGNORE ("processing instruction")
+    xmldecl = '<?xml' attr* '?>'     IGNORE (treat as a PI)
+element = emptytag | stag content etag
+  emptytag = '<' name (attr)* '/>'
+  stag = '<' name (attr)* '>'
+  etag = '</' name '>'
+  content = text? ((element | ref | cdsect | pi | comment) text?)*
+    text = [^<&]*
+    ref = '&#x' hexdigit+ ';'
+        | '&' name ';'
+    cdsect = '<![CDATA[' cdata ']]>'
+    cdata = .*   (ENDING WITH ']]>')
+name = [a-zA-Z_:] [a-zA-Z0-9.-]*
+attr = name '=' value
+  value = '"' ([^<&"] | ref)* '"'
+        | "'" ([^<&'] | ref)* "'"
+
+NOTES
+- Whitespace can occur anywhere in a tag after the tag name
+- Handle at least these entity refs:
+    &lt; &gt; &amp;  (< > &)
+    &apos; &quot;  (' ")
+
+PARSING SVG+XML
+- Skip over prolog
+- Parse elements...  <svg> should be the outer element
+- Generic element parsing:
+  - Parse element name
+  - Lookup in hash map, dispatch to parser function (including <svg>)
+- Element parser functions
+  - Parse each attribute
+    - Lookup via hash map or conditional (as appropriate)
+    - Typically parse as a number, store as a string, or ignore
+    - Always parse "style", as child elements inherit
+    - Always store "id" as a string

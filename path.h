@@ -1,28 +1,17 @@
 #ifndef PATH_H
 #define PATH_H
 
+#include <GL/glfw.h>
 #include "uthash/utlist.h"
 #include "uthash/utarray.h"
-#include <GL/glfw.h>
-
-//#include "matrix.h"
-//#include "gradient.h"
-
-typedef struct Vec2 {
-  double x, y;
-} Vec2;
+#include "mytypes.h"
+#include "matrix.h"
+#include "gradient.h"
 
 typedef struct Loop {
   Vec2 *points;
   int npoints;
 } Loop;
-
-// TODO: plain C
-struct Path;
-//typedef std::list< b2Vec2 > Vec2list;
-//typedef std::list< Vec2list * > Vec2lol;  // List of lists :)
-//typedef std::list< Path * > PathList;
-//typedef std::vector< b2Vec2 > Vec2Vec;
 
 typedef struct Path {
   char *id;             // XML path ID
@@ -34,8 +23,8 @@ typedef struct Path {
   GLubyte stroke[4];    // Stroke color
   int opacity;
 
-  //Gradient *gradient;
-  //Matrix *transform;
+  Gradient *gradient;
+  Matrix *transform;
 } Path;
 
 Path* path_new();

@@ -1,29 +1,22 @@
-#ifndef SVGPARSER_H
-#define SVGPARSER_H
+#ifndef SVG_H
+#define SVG_H
 
 #include <string.h>
 #include <GL/glfw.h>
 #include "uthash/uthash.h"
 #include "uthash/utlist.h"
+#include "mytypes.h"
 #include "matrix.h"
 #include "gradient.h"
 #include "path.h"
-#include "skin.h"
+#include "sprite.h"
 
-typedef int bool;
+bool svg_load(const char *filename, float32 scale, Sprite *sprite);
 
-const float32 kMaxShipSize = 5;  // Maximum ship size (meters)
-const int kCirclePoints = 25;   // Number of points in a circle
-const int kBezierPoints = 20;   // Number of points in a Bezier curve
-
-
+#if 0
 //========================================================================
 class SVGparser {
 public:
-  // TODO: Make all this shit private!
-  bool svg_debug;
-  float32 width, height;
-
   SVGparser() {
     svg_debug = false;
     vtable_init();
@@ -132,5 +125,6 @@ inline void SVGparser::parse_ws_() {
 }
 
 //========================================================================
+#endif
 
 #endif

@@ -1,5 +1,12 @@
 #include "matrix.h"
 
+#if 1
+
+inline Vec2 matrix_xform(Matrix *m, Vec2 v) {
+}
+
+#else
+
 #include <vector>
 #include "../util.h"
 
@@ -31,3 +38,4 @@ Matrix::Matrix(std::string m) {
     }
   }
 }
+#endif

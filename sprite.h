@@ -2,9 +2,8 @@
 #define SPRITE_H
 
 #include <GL/glfw.h>
+#include "mytypes.h"
 #include "path.h"
-
-typedef float float32; //XXX was this a box2d typedef?
 
 typedef struct Sprite {
   GLuint displist;
