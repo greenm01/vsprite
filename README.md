@@ -11,7 +11,15 @@ At some point, we may add support for other vector graphics formats, as SVG has 
 
 ## Dependencies:
 
-- Poly2tri-C
+- Poly2tri-C ... no, not needed
+- OpenGL libs...
+
+
+## Intended Use:
+
+Vsprite is pretty small, and you may wish to modify it, so I suggest that you incorporate it into your application's source tree and build process, rather than treat it as a separately packaged library.
+
+There are bigger, more robust libraries that do the same thing; what I like about Vsprite is, it's simple and direct, with no external dependencies except for OpenGL....
 
 
 ## Status:
