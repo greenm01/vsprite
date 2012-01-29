@@ -17,6 +17,7 @@ default: $(EXES)
 
 ## Executables
 $(BINDIR)/%: test/%.o $(OBJS)
+	mkdir -p $(dir $@)
 	$(CC) -o $@  $^  $(LIBS)
 
 ## Auto-generate dependencies
