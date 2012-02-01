@@ -11,6 +11,7 @@ typedef struct Sprite {
   double scale;         // arbitrary scaling factor
 
   Path *paths;
+  Path *skeleton;
   int npaths;
 } Sprite;
 

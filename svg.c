@@ -186,14 +186,33 @@ char* parse_xml_name() {
   }
 }
 
+// Parse over (skip) extraneous data
+bool skip_attrs() {
+  skip_whitespace();
+  if(parse_xml_name() == NULL) {
+    return false;
+  }
+  skip_whitespace();
+  // '='
+  int c = fgetc(input);
+  skip_whitespace();
+  // '"'
+  c = fgetc(input);
+  for(;;) {
+    c = fgetc(input);
+    if (c == '"') break;
+  }
+  return true;
+}
+
 //------------------------------------------------------------------------
-bool parse_xml_attr() {
+// Parse and return xml attribute name and value
+bool parse_xml_attr(char **name, char **value) {
   skip_whitespace();
 
   // attribute name
   char *k = parse_xml_name();
   if(k == NULL) {
-    //printf("END ATTRS\n");
     return false;
   }
 
@@ -241,18 +260,52 @@ bool parse_xml_attr() {
       return false;
   }
   fclose(out);
-
-  //printf("Parsed attr value: %s\n", buf);
-  //printf("Parsed attr: %s = %s\n", k, buf);
-  //printf("Parsed attr: %s\n", k);
-  //TODO do something w/ name/value
-
+  
+  *name = k;
+  *value = buf;
+  
   return true;
 }
 
+bool parse_svg_path(Sprite *sprite, Path *path) {
+  
+  char *name, *value;
+  while(parse_xml_attr(&name, &value));
+  
+}
+
 //------------------------------------------------------------------------
-bool parse_xml_attrs() {
-  while(parse_xml_attr());
+bool parse_xml_attrs(Sprite *sprite, const char *element) {
+  
+  char *name, *value;
+  
+  // Extract height and width data from svg
+  if(!strcmp(element, "svg")) {
+    while(parse_xml_attr(&name, &value)) {
+      if(!strcmp(name, "width")) {
+        sprite->width = atof(value);
+      } else if (!strcmp(name, "height")) {
+        sprite->height = atof(value);
+      }
+    }
+  } else if(!strcmp(element, "g")) {
+    // Extract skeleton from group
+    // Maybe there's a smarter way to do the skeleton rather than manual
+    while(parse_xml_attr(&name, &value)) {
+      if(!strcmp(name, "id")) {
+        if(!strcmp(value, "skeleton")) {
+          printf("**** found the skeleton! ****\n");
+        }
+      }
+    }
+  } else if(!strcmp(element, "path")) {
+      Path *path = path_new();
+      parse_svg_path(sprite, path);
+  } else {
+    // Parse and skip everything else
+    while(skip_attrs());
+  }
+  
   return true;
 }
 
@@ -263,7 +316,7 @@ bool parse_xml_pi() {
   //printf("GOT <?\n");
   free(parse_xml_name());
   //printf("GOT name\n");
-  parse_xml_attrs();
+  while(skip_attrs());
   //printf("GOT attrs\n");
   if(!match("?>")) return false;
   //printf("GOT ?>\n");
@@ -293,7 +346,6 @@ bool parse_xml_element();  // forward ref
 bool parse_xml_content() {
   for(;;) {
     int c = fgetc(input);
-    //printf("--> '%c'\n", c);
     if(c=='<') {
       int c = fgetc(input);
       fseek(input, -2, SEEK_CUR);
@@ -306,28 +358,28 @@ bool parse_xml_content() {
 }
 
 //------------------------------------------------------------------------
-bool parse_xml_element() {
+bool parse_xml_element(Sprite *sprite) {
   if(fgetc(input) != '<') return false;
-  char *name = parse_xml_name();
-  printf("BEGIN <%s> TAG\n", name);
+  char *element = parse_xml_name();
+  printf("BEGIN <%s> TAG\n", element);
 
-  parse_xml_attrs();
+  parse_xml_attrs(sprite, element);
 
   if(match("/>")) {
-    printf("PARSED EMPTY <%s/> TAG\n", name);
+    printf("PARSED EMPTY <%s/> TAG\n", element);
     return true;
   }
 
   if(!match(">")) {
-    printf("EXPECTED '>' TO CLOSE <%s> TAG\n", name);
+    printf("EXPECTED '>' TO CLOSE <%s> TAG\n", element);
     return false;
   }
 
-  printf("PARSING CONTENT OF <%s> TAG\n", name);
+  printf("PARSING CONTENT OF <%s> TAG\n", element);
   parse_xml_content();
 
-  if(! (match("</") && match(name) && match(">"))) {
-    printf("EXPECTED </%s> CLOSING TAG\n", name);
+  if(! (match("</") && match(element) && match(">"))) {
+    printf("EXPECTED </%s> CLOSING TAG\n", element);
     return false;
   }
   return true;
@@ -355,7 +407,7 @@ bool svg_load(const char *filename, float32 scale, Sprite *sprite) {
     printf("XML prologue not parsed\n");
     return false;
   }
-  if (!parse_xml_element()) {
+  if (!parse_xml_element(sprite)) {
     printf("FAILED to parse XML body (i.e. <svg>...</svg>\n");
     return false;
   }

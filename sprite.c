@@ -52,13 +52,15 @@ void compute_bbox(Sprite *sprite, float32 scale) {
 #endif
   printf("-- bbox: %.0f,%.0f %.0f %.0f\n", bbx1,bby1, bbx2,bby2);
 
+  /*
   // Bounding box calcs... downsize and center
   float w,h;
   w = bbx2 - bbx1;
   h = bby2 - bby1;
-
-  sprite->width = scale * w;
-  sprite->height = scale * h;
+  */
+  
+  sprite->width *= scale;
+  sprite->height *= scale;
 }
 
 //------------------------------------------------------------------------

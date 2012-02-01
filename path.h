@@ -25,6 +25,9 @@ typedef struct Path {
 
   Gradient *gradient;
   Matrix *transform;
+  // Next path in lined list
+  struct Path *next;
+  
 } Path;
 
 Path* path_new();
